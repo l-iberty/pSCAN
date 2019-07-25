@@ -1,6 +1,6 @@
 ﻿#include "Graph.h"
 
-Graph::Graph(int nr_vertices, std::vector<std::vector<Vertex>>& edges)
+Graph::Graph(int nr_vertices, std::vector<std::vector<Graph::Vertex>>& edges)
 	: nr_vertices_(nr_vertices), edges_(edges),
 	epsilon_(0), miu_(0),
 	visited_(nr_vertices, false),
@@ -24,16 +24,16 @@ void Graph::Reset()
 	core_clusters_.clear();
 }
 
-std::vector<std::vector<Vertex>> Graph::SCAN(float epsilon, int miu)
+std::vector<std::vector<Graph::Vertex>> Graph::SCAN(float epsilon, int miu)
 {
 	assert(epsilon > 0 && epsilon <= 1 && miu >= 2);
 	epsilon_ = epsilon, miu_ = miu;
 
 	// compute structural similarity for each edge, and ϵ-neighborhoods for each vertex.
 	AdjacentTable epsilon_neis; // ϵ-neighborhoods
-	for (std::vector<Vertex>& e : edges_)
+	for (std::vector<Graph::Vertex>& e : edges_)
 	{
-		Vertex u = e[0], v = e[1];
+		Graph::Vertex u = e[0], v = e[1];
 		float sim = ComputeSimilarity(u, v);
 		//printf("[%d,%d] %.2f\n", u, v, sim);
 
@@ -60,15 +60,15 @@ std::vector<std::vector<Vertex>> Graph::SCAN(float epsilon, int miu)
 	//printGraph(epsilon_neis);
 
 	visited_.assign(nr_vertices_, false);
-	std::vector<std::vector<Vertex>> clusters;
-	for (Vertex u = 0; u < nr_vertices_; u++)
+	std::vector<std::vector<Graph::Vertex>> clusters;
+	for (Graph::Vertex u = 0; u < nr_vertices_; u++)
 	{
 		if (!visited_[u])
 		{
 			std::vector<int> cluster = { u };
 			for (unsigned int i = 0; i < cluster.size(); i++)
 			{
-				Vertex v = cluster[i];
+				Graph::Vertex v = cluster[i];
 				if (!visited_[v])
 				{
 					visited_[v] = true;
@@ -84,18 +84,18 @@ std::vector<std::vector<Vertex>> Graph::SCAN(float epsilon, int miu)
 	return clusters;
 }
 
-std::vector<std::vector<Vertex>> Graph::pSCAN(float epsilon, int miu)
+std::vector<std::vector<Graph::Vertex>> Graph::pSCAN(float epsilon, int miu)
 {
 	assert(epsilon > 0 && epsilon <= 1 && miu >= 2);
 	epsilon_ = epsilon, miu_ = miu;
 
-	for (Vertex u = 0; u < nr_vertices_; u++)
+	for (Graph::Vertex u = 0; u < nr_vertices_; u++)
 	{
 		similar_degree_[u] = 0;
 		effective_degree_[u] = graph_[u].size() + 1;
 	}
 
-	for (Vertex u = 0; u < nr_vertices_; u++)
+	for (Graph::Vertex u = 0; u < nr_vertices_; u++)
 	{
 		CheckCore(u);
 		if (similar_degree_[u] >= miu_)
@@ -106,40 +106,40 @@ std::vector<std::vector<Vertex>> Graph::pSCAN(float epsilon, int miu)
 	}
 	//set_.DispRoots();
 	GetCoreClusters();
-	std::vector<std::vector<Vertex>> clusters = ClusterNoncore();
+	std::vector<std::vector<Graph::Vertex>> clusters = ClusterNoncore();
 
 	return clusters;
 }
 
 void Graph::BuildGraph()
 {
-	for (std::vector<Vertex>& e : edges_)
+	for (std::vector<Graph::Vertex>& e : edges_)
 	{
-		Vertex u = e[0], v = e[1];
+		Graph::Vertex u = e[0], v = e[1];
 		graph_[u].push_back(v);
 		graph_[v].push_back(u);
 	}
 }
 
-float Graph::GetSimilarity(Vertex u, Vertex v)
+float Graph::GetSimilarity(Graph::Vertex u, Graph::Vertex v)
 {
 	assert(similarities_[u][v] == similarities_[v][u]);
 	return similarities_[u][v];
 }
 
-float Graph::ComputeSimilarity(Vertex u, Vertex v)
+float Graph::ComputeSimilarity(Graph::Vertex u, Graph::Vertex v)
 {
 	if (GetSimilarity(u, v) != 0) return GetSimilarity(u, v);
 
-	std::vector<Vertex> neis_u = graph_[u] + u;
-	std::vector<Vertex> neis_v = graph_[v] + v;
+	std::vector<Graph::Vertex> neis_u = graph_[u] + u;
+	std::vector<Graph::Vertex> neis_v = graph_[v] + v;
 	float sim = static_cast<float>(my_intersection(neis_u, neis_v).size()) /
 		static_cast<float>(std::sqrt(neis_u.size() * neis_v.size()));
 	similarities_[u][v] = similarities_[v][u] = sim;
 	return sim;
 }
 
-float Graph::ApproximateSimilarity(Vertex u, Vertex v)
+float Graph::ApproximateSimilarity(Graph::Vertex u, Graph::Vertex v)
 {
 	return ComputeSimilarity(u, v);
 #if 0
@@ -149,8 +149,8 @@ float Graph::ApproximateSimilarity(Vertex u, Vertex v)
 
 	if (GetSimilarity(u, v) != 0) return GetSimilarity(u, v);
 
-	std::vector<Vertex> neis_u = graph_[u] + u;
-	std::vector<Vertex> neis_v = graph_[v] + v;
+	std::vector<Graph::Vertex> neis_u = graph_[u] + u;
+	std::vector<Graph::Vertex> neis_v = graph_[v] + v;
 
 	int deg_u = neis_u.size();
 	int deg_v = neis_v.size();
@@ -168,9 +168,9 @@ float Graph::ApproximateSimilarity(Vertex u, Vertex v)
 #endif
 }
 
-void Graph::CheckCore(Vertex u)
+void Graph::CheckCore(Graph::Vertex u)
 {
-	std::vector<Vertex> neis = graph_[u] + u; // structural neighborhoods of u
+	std::vector<Graph::Vertex> neis = graph_[u] + u; // structural neighborhoods of u
 
 	// if ed(u) < μ then u is not a core vertex, of if sd(u) ≥ μ then u is a core vertex.
 	// Otherwise, sd(u) < μ ≤ ed(u), and we need to compute structural similarities between
@@ -178,7 +178,7 @@ void Graph::CheckCore(Vertex u)
 	if (effective_degree_[u] >= miu_ && similar_degree_[u] < miu_)
 	{
 		effective_degree_[u] = graph_[u].size() + 1; similar_degree_[u] = 0; // reinitialize ed(u) and sd(u)
-		for (Vertex v: neis)
+		for (Graph::Vertex v: neis)
 		{
 			// For each vertex v ∈ N[u], we first compute the structural similarity between u and v,
 			// and update sd(u) or ed(u) accordingly.
@@ -198,10 +198,10 @@ void Graph::CheckCore(Vertex u)
 	visited_[u] = true;
 }
 
-void Graph::ClusterCore(Vertex u)
+void Graph::ClusterCore(Graph::Vertex u)
 {
-	std::vector<Vertex> neis = graph_[u] + u; // structural neighborhoods of u
-	for (Vertex v : neis)
+	std::vector<Graph::Vertex> neis = graph_[u] + u; // structural neighborhoods of u
+	for (Graph::Vertex v : neis)
 	{
 		bool computed = (GetSimilarity(u, v) != 0);
 		if (computed)
@@ -235,7 +235,7 @@ void Graph::ClusterCore(Vertex u)
 void Graph::GetCoreClusters()
 {
 	int *roots = set_.GetRoots();
-	std::vector<Vertex> subset;
+	std::vector<Graph::Vertex> subset;
 	for (int x = 0; x < set_.GetSize(); x++)
 	{
 		if (core_[x])
@@ -247,17 +247,17 @@ void Graph::GetCoreClusters()
 	}
 }
 
-std::vector<std::vector<Vertex>> Graph::ClusterNoncore()
+std::vector<std::vector<Graph::Vertex>> Graph::ClusterNoncore()
 {
-	std::vector<std::vector<Vertex>> clusters;
+	std::vector<std::vector<Graph::Vertex>> clusters;
 
 	for (auto it = core_clusters_.begin(); it != core_clusters_.end(); it++)
 	{
-		std::vector<Vertex>& subset = it->second;
+		std::vector<Graph::Vertex>& subset = it->second;
 		for (unsigned int i = 0; i < subset.size(); i++)
 		{
-			Vertex u = subset[i];
-			for (Vertex v : graph_[u])
+			Graph::Vertex u = subset[i];
+			for (Graph::Vertex v : graph_[u])
 			{
 				if (similar_degree_[v] < miu_ && !linear_search(subset, v))
 				{

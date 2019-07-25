@@ -14,12 +14,13 @@
 #include "util.h"
 #include "disjoint_set.h"
 
-typedef int Vertex;
-typedef std::unordered_map<Vertex, std::vector<Vertex>> AdjacentTable;
 
 class Graph
 {
 public:
+	typedef int Vertex;
+	typedef std::unordered_map<Vertex, std::vector<Vertex>> AdjacentTable;
+
 	Graph(int nr_vertices, std::vector<std::vector<Vertex>>& edges);
 	~Graph() = default;
 	std::vector<std::vector<Vertex>> SCAN(float epsilon, int miu);

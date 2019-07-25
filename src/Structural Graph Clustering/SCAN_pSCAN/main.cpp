@@ -17,15 +17,12 @@
 #include "disjoint_set.h"
 #include "Graph.h"
 
-typedef int Vertex;
-typedef std::unordered_map<Vertex, std::vector<Vertex>> AdjacentTable;
-
-void printGraph(int n, AdjacentTable& graph)
+void printGraph(int n, Graph::AdjacentTable& graph)
 {
-	for (Vertex u = 0; u < n; u++)
+	for (Graph::Vertex u = 0; u < n; u++)
 	{
 		std::cout << "[" << u << "] ";
-		for (Vertex v : graph[u])
+		for (Graph::Vertex v : graph[u])
 		{
 			printf("%d ", v);
 			std::cout << v << " ";
@@ -35,20 +32,20 @@ void printGraph(int n, AdjacentTable& graph)
 	std::cout << "\n";
 }
 
-AdjacentTable buildGraph(std::vector<std::vector<Vertex>>& edges)
+Graph::AdjacentTable buildGraph(std::vector<std::vector<Graph::Vertex>>& edges)
 {
 	std::cout << "building graph...\n";
-	AdjacentTable graph;
-	for (std::vector<Vertex>& edge : edges)
+	Graph::AdjacentTable graph;
+	for (std::vector<Graph::Vertex>& edge : edges)
 	{
-		Vertex u = edge[0], v = edge[1];
+		Graph::Vertex u = edge[0], v = edge[1];
 		graph[u].push_back(v);
 		graph[v].push_back(u);
 	}
 	return graph;
 }
 
-std::vector<std::vector<Vertex>> readEdges(const char* filename)
+std::vector<std::vector<Graph::Vertex>> readEdges(const char* filename)
 {
 	//std::cout << "reading edges from file...\n";
 	std::vector<std::vector<int>> edges;
@@ -63,7 +60,7 @@ std::vector<std::vector<Vertex>> readEdges(const char* filename)
 		char *q = strchr(buf, '\n');
 		if (p == nullptr || q == nullptr) break;
 		*p = 0, *q = 0;
-		Vertex u = atoi(buf), v = atoi(p + 1);
+		Graph::Vertex u = atoi(buf), v = atoi(p + 1);
 		edges.push_back({ u, v });
 	}
 	fclose(file);
@@ -74,13 +71,13 @@ void TEST1(float epsilon, int miu)
 {
 	std::cout << "\n======== [ TEST1 ] ========\n";
 
-	std::vector<std::vector<Vertex>> edges = {
+	std::vector<std::vector<Graph::Vertex>> edges = {
 		{ 0, 1 }, { 1, 4 }, { 4, 5 }, { 5, 3 }, { 3, 0 }, { 0, 2 }, { 1, 2 }, { 4, 2 },
 		{ 5, 2 }, { 3, 2 }, { 4, 6 }, { 5, 7 }, { 7, 8 }, { 8, 9 }, { 9, 11 }, { 11, 10 },
 		{ 10, 8 }, { 9, 10 } };
 	
 	Graph graph(12, edges);
-	std::vector<std::vector<Vertex>> C;
+	std::vector<std::vector<Graph::Vertex>> C;
 	
 	std::cout << "\n=== SCAN ===\n";
 
@@ -115,7 +112,7 @@ void TEST2(int nr_vertices, const char* filename, float epsilon, int miu)
 
 	std::vector<std::vector<int>> edges = readEdges(filename);
 	Graph graph(nr_vertices, edges);
-	std::vector<std::vector<Vertex>> C;
+	std::vector<std::vector<Graph::Vertex>> C;
 	clock_t start, end;
 	double time_elapsed;
 
